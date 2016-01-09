@@ -8,6 +8,23 @@
     <version>1.0</version>
 
     <build>
+        <sourceDirectory>JavaSource</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>JavaSource</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </resource>
+
+            <resource>
+                <directory>Resources</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

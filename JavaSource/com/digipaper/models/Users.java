@@ -4,13 +4,10 @@ import com.digipaper.framework.generics.GenericModel;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
-public class User extends GenericModel {
+public class Users extends GenericModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

@@ -1,11 +1,9 @@
 package com.digipaper.framework.generics;
 
-import com.digipaper.framework.interfaces.IGenericModel;
-
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
-public abstract class GenericService<T extends IGenericModel> {
+public abstract class GenericService<T extends GenericModel> {
 
     @Inject
     EntityManager entityManager;

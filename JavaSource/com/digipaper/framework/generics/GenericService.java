@@ -83,7 +83,7 @@ public abstract class GenericService<T extends GenericModel> {
         entityManager.joinTransaction();
 
         if(model.getId() != null) {
-            entityManager.remove(model);
+            entityManager.remove(entityManager.merge(model));
         }
     }
 
@@ -100,5 +100,10 @@ public abstract class GenericService<T extends GenericModel> {
         }
 
         return entityManager.createQuery(criteriaQuery).getResultList();
+    }
+
+    public T GetById(Integer id) throws Exception {
+        entityManager.joinTransaction();
+        return entityManager.find(type, id);
     }
 }

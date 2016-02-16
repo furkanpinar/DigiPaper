@@ -5,9 +5,7 @@ import com.digipaper.framework.rest.ResponseList;
 import com.digipaper.framework.rest.ResponseObject;
 import com.digipaper.models.Users;
 import com.fasterxml.jackson.core.JsonParser;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
+import com.google.gson.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -20,9 +18,22 @@ public abstract class GenericRS<T extends GenericModel> {
     @Path("/getAll")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseList<T> getRecords() throws Exception {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
         ResponseList<T> response = new ResponseList<>();
         response.setAction("view");
+
+        JsonElement element = gson.toJsonTree(genericService().GetAll("name"));
+        System.out.println("element : " + element);
+        JsonObject object = element.getAsJsonObject();
+
+        if(object.isJsonArray()) {
+            JsonArray array = object.getAsJsonArray();
+
+        }
+
         response.setDatas(genericService().GetAll("name"));
+        response.initialize();
 
         return response;
     }

@@ -16,4 +16,15 @@ public class Users extends GenericModel {
     @Getter @Setter String name;
     @Getter @Setter String email;
     @Getter @Setter String password;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Company company;
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
+    }
 }

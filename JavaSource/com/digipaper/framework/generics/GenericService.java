@@ -1,7 +1,5 @@
 package com.digipaper.framework.generics;
 
-import com.digipaper.framework.query.QueryParam;
-
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.*;

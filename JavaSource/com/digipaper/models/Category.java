@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 public class Category extends GenericModel {
@@ -14,16 +15,12 @@ public class Category extends GenericModel {
     @Getter @Setter Integer id;
 
     @Getter @Setter String name;
+    @Getter @Setter Date createDate;
     @Getter @Setter Boolean isActive;
     @Getter @Setter String description;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Category parentCategory;
-
-    @Override
-    public String toString() {
-        return "category [id=" + id + ", name=" + name + "]";
-    }
 
     public Category getCategory() {
         return parentCategory;

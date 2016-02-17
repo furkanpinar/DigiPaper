@@ -1,26 +1,77 @@
 package com.digipaper.framework.generics;
 
-import com.digipaper.framework.rest.RequestObject;
 import com.digipaper.framework.rest.ResponseList;
-import com.digipaper.framework.rest.ResponseObject;
-import com.digipaper.models.Users;
 import com.google.gson.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import javax.ws.rs.core.Response;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
 
 public abstract class GenericRS<T extends GenericModel> {
 
     protected abstract GenericService<T> genericService();
 
+    protected Class<T> type;
+
+    @SuppressWarnings("unchecked")
+    public GenericRS(){
+        type = (Class<T>) getTypeArguments(GenericRS.class, getClass()).get(0);
+    }
+
+    public static Class<?> getClass(Type type) {
+        if (type instanceof Class) {
+            return (Class<?>) type;
+        } else if (type instanceof ParameterizedType) {
+            return getClass(((ParameterizedType) type).getRawType());
+        } else {
+            return null;
+        }
+    }
+
+    public static <T> List<Class<?>> getTypeArguments(Class<T> baseClass, Class<? extends T> childClass) {
+        Map<Type, Type> resolvedTypes = new HashMap<Type, Type>();
+        Type type = childClass;
+        while (!getClass(type).equals(baseClass)) {
+            if (type instanceof Class) {
+                type = ((Class<?>) type).getGenericSuperclass();
+            } else {
+                ParameterizedType parameterizedType = (ParameterizedType) type;
+                Class<?> rawType = (Class<?>) parameterizedType.getRawType();
+
+                if (!rawType.equals(baseClass)) {
+                    type = rawType.getGenericSuperclass();
+                }
+            }
+        }
+
+        Type[] actualTypeArguments;
+        if (type instanceof Class) {
+            actualTypeArguments = ((Class<?>) type).getTypeParameters();
+        } else {
+            actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
+        }
+        List<Class<?>> typeArgumentsAsClasses = new ArrayList<>();
+
+        for (Type baseType : actualTypeArguments) {
+            while (resolvedTypes.containsKey(baseType)) {
+                baseType = resolvedTypes.get(baseType);
+            }
+            typeArgumentsAsClasses.add(getClass(baseType));
+        }
+        return typeArgumentsAsClasses;
+    }
+
+
     @GET
     @Path("/getAll")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseList<T> getRecords() throws Exception {
+
+        System.out.println("URL : /rest/" + type.getSimpleName() + "/getAll");
+
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         ResponseList<T> response = new ResponseList<>();
@@ -51,54 +102,94 @@ public abstract class GenericRS<T extends GenericModel> {
         }
         response.setDatas(gson.fromJson(element, List.class));
 
+        String requestString = gson.toJson(element);
+        System.out.println(requestString);
+
         return response;
+    }
+
+    public static JsonElement clearNullValues(JsonElement element) {
+        if(element.isJsonObject()) {
+            Set<Map.Entry<String, JsonElement>> entries = element.getAsJsonObject().entrySet();
+            for (Map.Entry<String, JsonElement> entry: entries) {
+                if(entry.getValue().isJsonObject()) {
+                    JsonObject childObject = entry.getValue().getAsJsonObject();
+                    Set<Map.Entry<String, JsonElement>> entriesChild = element.getAsJsonObject().entrySet();
+                    for (Map.Entry<String, JsonElement> entryChild: entriesChild) {
+                        if(!"id".equals(entryChild.getKey()) && !"name".equals(entryChild.getKey()) && !"code".equals(entryChild.getKey()))
+                            childObject.remove(entryChild.getKey());
+                    }
+                }
+            }
+        }
+        return element;
     }
 
     @GET
     @Path("/get/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseObject<T> getRecord(@PathParam("id") Integer id) throws Exception{
+    public Response getRecord(@PathParam("id") Integer id) throws Exception{
+
+        System.out.println("URL : " + type.getName() + "/get/" + id);
+
+        JsonObject response = new JsonObject();
+
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        ResponseObject<T> response = new ResponseObject<>();
-        response.setAction("view");
-        response.setData(genericService().GetById(id));
+        response.add("action", gson.toJsonTree("view"));
 
-        String prettyJsonString = gson.toJson(response);
-        System.out.println(prettyJsonString);
+        JsonElement element = gson.toJsonTree(genericService().GetById(id));
 
-        return response;
+        clearNullValues(element);
+
+        response.add("data", element);
+
+        System.out.println(gson.toJson(response));
+
+        return Response.ok(response.toString(), MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/save")
     @Consumes(MediaType.APPLICATION_JSON)
-    public ResponseObject<T> saveUser(RequestObject<Users> model) throws Exception{
+    public Response saveUser(String request) throws Exception{
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        String requestString = gson.toJson(model);
-        System.out.println(requestString);
+        JsonObject req = new JsonParser().parse(request).getAsJsonObject();
 
-        genericService().Save((T)model.getData());
-        ResponseObject<T> response = new ResponseObject<>();
-        response.setAction("view");
-        response.setData(genericService().GetById(model.getData().getId()));
+        System.out.println(gson.toJson(req));
 
-        String responseString = gson.toJson(response);
-        System.out.println(responseString);
+        T model = gson.fromJson(req.get("data"), type);
 
-        return response;
+        genericService().Save(model);
+
+        JsonObject response = new JsonObject();
+
+        response.add("action", gson.toJsonTree("view"));
+
+        JsonElement element = gson.toJsonTree(genericService().GetById(model.getId()));
+
+        clearNullValues(element);
+
+        response.add("data", element);
+
+        System.out.println(gson.toJson(response));
+
+        return Response.ok(response.toString(), MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/delete")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void deleteUser(RequestObject<Users> model) throws Exception{
+    public void deleteUser(String request) throws Exception{
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        String requestString = gson.toJson(model);
-        System.out.println(requestString);
+        JsonObject req = new JsonParser().parse(request).getAsJsonObject();
 
-        genericService().Delete((T) model.getData());
+        System.out.println(gson.toJson(req));
+
+        T model = gson.fromJson(req.get("data"), type);
+
+        genericService().Delete(model);
     }
 }

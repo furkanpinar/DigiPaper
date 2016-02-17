@@ -1,10 +1,10 @@
 package com.digipaper.framework.generics;
 
+import com.digipaper.framework.query.QueryParam;
+
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;

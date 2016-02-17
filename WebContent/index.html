@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html ng-app="App">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+</head>
+<body ng-controller="MainCtrl" ng-init="init()">
+<table class="table table-striped table-bordered table-hover">
+    <tr ng-repeat="model in models">
+        <td>{{ model.id}}</td>
+        <td>{{ model.name}}</td>
+        <td>{{ model.parentCategory.name}}</td>
+        <td>{{ model.isActive}}</td>
+    </tr>
+
+</table>
+
+<script>
+    var App = angular.module('App', []);
+    App.controller('MainCtrl', ['$scope', '$http', function($scope, $http) {
+
+        $scope.init = function() {
+
+            $http.get("http://localhost:8080/DigiPaper/rest/Category/getAll").then(function(data) {
+                $scope.action = data.data.action;
+                $scope.models = data.data.datas;
+                $scope.messages = data.data.message;
+                $scope.data = data;
+            });
+
+        };
+    }]);
+</script>
+</body>
+</html>

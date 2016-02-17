@@ -4,11 +4,14 @@ import com.digipaper.framework.rest.RequestObject;
 import com.digipaper.framework.rest.ResponseList;
 import com.digipaper.framework.rest.ResponseObject;
 import com.digipaper.models.Users;
-import com.fasterxml.jackson.core.JsonParser;
 import com.google.gson.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public abstract class GenericRS<T extends GenericModel> {
 
@@ -24,16 +27,29 @@ public abstract class GenericRS<T extends GenericModel> {
         response.setAction("view");
 
         JsonElement element = gson.toJsonTree(genericService().GetAll("name"));
-        System.out.println("element : " + element);
-        JsonObject object = element.getAsJsonObject();
+        JsonArray array = element.getAsJsonArray();
 
-        if(object.isJsonArray()) {
-            JsonArray array = object.getAsJsonArray();
+        Iterator<JsonElement> jsonElementIterator = array.iterator();
 
+        while(jsonElementIterator.hasNext()) {
+
+            JsonElement el = jsonElementIterator.next();
+            if(el.isJsonObject()) {
+
+                Set<Map.Entry<String, JsonElement>> entries = el.getAsJsonObject().entrySet();
+                for (Map.Entry<String, JsonElement> entry: entries) {
+                    if(entry.getValue().isJsonObject()) {
+                        JsonObject childObject = entry.getValue().getAsJsonObject();
+                        Set<Map.Entry<String, JsonElement>> entriesChild = el.getAsJsonObject().entrySet();
+                        for (Map.Entry<String, JsonElement> entryChild: entriesChild) {
+                            if(!"id".equals(entryChild.getKey()) && !"name".equals(entryChild.getKey()) && !"code".equals(entryChild.getKey()))
+                                childObject.remove(entryChild.getKey());
+                        }
+                    }
+                }
+            }
         }
-
-        response.setDatas(genericService().GetAll("name"));
-        response.initialize();
+        response.setDatas(gson.fromJson(element, List.class));
 
         return response;
     }

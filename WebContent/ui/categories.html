@@ -1,0 +1,59 @@
+<div class="col-md-12" ng-controller="CategoriesCtrl" ng-init="generic.Init()">
+    <div class="page-header">
+        <h4><a href="#home">{{ 'HOME' | translate }}</a> > <small>{{ urlName | translate }}</small></h4>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <table class="table table-condensed table-striped table-hover">
+                <thead>
+                <td>#</td>
+                <td>Name</td>
+                <td>Active</td>
+                <td>Description</td>
+                <td>Parent Category</td>
+                </thead>
+
+                <tbody>
+                <tr ng-repeat="category in generic.scope.models">
+                    <td>
+                        <a class="btn" ng-click="generic.View(category.id)">
+                            <i class="fa fa-search"></i> View
+                        </a>
+                    </td>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.isActive }}</td>
+                    <td>{{ category.description }}</td>
+                    <td>{{ category.parentCategory.name }}</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="box">
+                        <div class="box-body box-primary">
+                            <div class="form-group">
+                                <label for="exampleInputName">Name</label>
+                                <input type="text" class="form-control" id="exampleInputName" placeholder="Name" ng-model="model.name" value="{{ model.name }}">
+                            </div>
+                        </div>
+                        <div class="box-footer">
+                            <button type="submit" class="btn btn-primary" ng-click="generic.New()">New</button>
+                            <button type="submit" class="btn btn-primary" ng-click="generic.Save(model)">Save</button>
+                            <button type="submit" class="btn btn-primary" ng-click="generic.Delete(model)">Delete</button>
+                            <button type="submit" class="btn btn-primary" ng-click="generic.Copy(model)">Copy</button>
+                            <button type="submit" class="btn btn-primary" ng-click="generic.Refresh()">Refresh</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    App.registerCtrl('CategoriesCtrl', function($scope, $rootScope, $routeParams, MyService) {
+        $scope.generic = new MyService($scope, 'Category');
+
+        $scope.urlName = $routeParams.name.substring(0, 1).toUpperCase() + $routeParams.name.substring(1, $routeParams.name.length);
+    });
+</script>

@@ -1,0 +1,20 @@
+package com.digipaper.framework.enums;
+
+public enum ClauseType {
+	ISNOTNULL,
+	ISNULL,
+	EQUAL,
+    EQUALFORCODE,
+	LIKE,
+	LIKE2,
+	BETWEEN,
+	GREATERTHANOREQUAL,
+	GREATERTHAN,
+	LESSTHANOREQUALTO,
+	LESSTHAN,
+	IN,
+    NOTIN,
+	NOTEQUAL,
+    LITERAL,
+    LITERALEQUAL;
+}

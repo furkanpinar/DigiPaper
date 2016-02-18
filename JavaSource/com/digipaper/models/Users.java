@@ -1,11 +1,8 @@
 package com.digipaper.models;
 
 import com.digipaper.framework.generics.GenericModel;
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.ManyToAny;
 
 import javax.persistence.*;
 

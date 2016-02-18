@@ -1,9 +1,14 @@
 package com.digipaper.framework.generics;
 
+import com.digipaper.framework.enums.ClauseType;
+import com.digipaper.framework.query.QueryService;
 import com.digipaper.framework.rest.ResponseList;
+import com.digipaper.models.Category;
 import com.google.gson.*;
 
+import javax.inject.Inject;
 import javax.ws.rs.*;
+import com.digipaper.framework.query.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.ParameterizedType;
@@ -13,6 +18,9 @@ import java.util.*;
 public abstract class GenericRS<T extends GenericModel> {
 
     protected abstract GenericService<T> genericService();
+
+    @Inject
+    QueryService<T> queryService;
 
     protected Class<T> type;
 
@@ -108,6 +116,50 @@ public abstract class GenericRS<T extends GenericModel> {
         return response;
     }
 
+    @GET
+    @Path("/getAutoCompleteValues")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResponseList<T> getAutoCompleteValues() throws Exception {
+
+        System.out.println("URL : /rest/" + type.getSimpleName() + "/getAutoCompleteValues/");
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+        ResponseList<T> response = new ResponseList<>();
+        response.setAction("view");
+
+        List<QueryParam> where = new ArrayList<>();
+        where.add(new QueryParam("isActive", true, ClauseType.EQUAL));
+
+        JsonElement element = gson.toJsonTree(genericService().GetAutoCompleteData(where, "name", "", null), List.class);
+        JsonArray array = element.getAsJsonArray();
+
+        Iterator<JsonElement> jsonElementIterator = array.iterator();
+
+        while(jsonElementIterator.hasNext()) {
+
+            JsonElement el = jsonElementIterator.next();
+            if(el.isJsonObject()) {
+                JsonObject object = el.getAsJsonObject();
+                Set<Map.Entry<String, JsonElement>> entries = object.entrySet();
+                for (Map.Entry<String, JsonElement> entry: entries) {
+                    if(!"id".equals(entry.getKey()) && !"name".equals(entry.getKey())) {
+                        object.remove(entry.getKey());
+                        System.out.println("DELETE : " + entry.getKey());
+                    } else {
+                        System.out.println(entry.getKey());
+                    }
+                }
+            }
+        }
+        response.setDatas(gson.fromJson(element, List.class));
+
+        String requestString = gson.toJson(element);
+        System.out.println(requestString);
+
+        return response;
+    }
+
     public static JsonElement clearNullValues(JsonElement element) {
         if(element.isJsonObject()) {
             Set<Map.Entry<String, JsonElement>> entries = element.getAsJsonObject().entrySet();
@@ -153,7 +205,7 @@ public abstract class GenericRS<T extends GenericModel> {
     @Path("/save")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response saveUser(String request) throws Exception{
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
 
         JsonObject req = new JsonParser().parse(request).getAsJsonObject();
 

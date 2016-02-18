@@ -4,6 +4,7 @@
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
+
             <table class="table table-condensed table-striped table-hover">
                 <thead>
                 <td>#</td>
@@ -14,7 +15,7 @@
                 </thead>
 
                 <tbody>
-                <tr ng-repeat="category in generic.scope.models">
+                <tr ng-repeat="category in models">
                     <td>
                         <a class="btn" ng-click="generic.View(category.id)">
                             <i class="fa fa-search"></i> View
@@ -28,13 +29,20 @@
                 </tbody>
             </table>
 
+            {{ model }}
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="box">
                         <div class="box-body box-primary">
                             <div class="form-group">
-                                <label for="exampleInputName">Name</label>
+                                <label>Name</label>
                                 <input type="text" class="form-control" id="exampleInputName" placeholder="Name" ng-model="model.name" value="{{ model.name }}">
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <!--input type="text" ng-model="model.parentCategory.name" typeahead="cat.id as cat.name for cat in categories | filter:{$viewValue}"-->
+                                <input type="text" class="form-control" ng-model="model.parentCategory" typeahead="cat as cat.name for cat in categories | filter:$viewValue | limitTo:8">
                             </div>
                         </div>
                         <div class="box-footer">
@@ -53,6 +61,8 @@
 <script>
     App.registerCtrl('CategoriesCtrl', function($scope, $rootScope, $routeParams, MyService) {
         $scope.generic = new MyService($scope, 'Category');
+
+        $scope.generic.getAutoCompleteValues();
 
         $scope.urlName = $routeParams.name.substring(0, 1).toUpperCase() + $routeParams.name.substring(1, $routeParams.name.length);
     });

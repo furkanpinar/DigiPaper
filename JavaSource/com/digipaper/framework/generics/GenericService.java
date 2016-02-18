@@ -1,14 +1,16 @@
 package com.digipaper.framework.generics;
 
+import com.digipaper.framework.enums.ClauseType;
+import com.digipaper.framework.query.QueryParam;
+
+import javax.ejb.EJBException;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.criteria.*;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class GenericService<T extends GenericModel> {
 
@@ -35,10 +37,8 @@ public abstract class GenericService<T extends GenericModel> {
     public static <T> List<Class<?>> getTypeArguments(Class<T> baseClass, Class<? extends T> childClass) {
         Map<Type, Type> resolvedTypes = new HashMap<Type, Type>();
         Type type = childClass;
-        // start walking up the inheritance hierarchy until we hit baseClass
         while (!getClass(type).equals(baseClass)) {
             if (type instanceof Class) {
-                // there is no useful information for us in raw types, so just keep going.
                 type = ((Class<?>) type).getGenericSuperclass();
             } else {
                 ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -90,6 +90,40 @@ public abstract class GenericService<T extends GenericModel> {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(type);
         Root<T> queryRoot = criteriaQuery.from(type);
+
+        if (order != null && !"".equals(order)){
+            String[] orderParams = order.split(",");
+            for (String o : orderParams)
+                criteriaQuery.orderBy(criteriaBuilder.asc(queryRoot.get(o)));
+        }
+
+        return entityManager.createQuery(criteriaQuery).getResultList();
+    }
+
+    public List<T> GetAutoCompleteData(List<QueryParam> where, String order, String restriction, Integer limit) {
+        entityManager.joinTransaction();
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(type);
+        Root<T> queryRoot = criteriaQuery.from(type);
+
+        List<Predicate> predicateList = new LinkedList<>();
+
+        if (where != null) {
+            for (QueryParam queryParam : where) {
+                String key = queryParam.getKey();
+                Object value = queryParam.getValue();
+                ClauseType clauseType = queryParam.getType();
+
+                if (ClauseType.EQUAL.equals(clauseType) || ClauseType.EQUALFORCODE.equals(clauseType)) {
+                    if (value instanceof GenericModel) {
+                        value = ((GenericModel) value).getId();
+                    }
+                    predicateList.add(criteriaBuilder.equal(queryRoot.get(key), value));
+                } else if (ClauseType.NOTEQUAL.equals(clauseType)) {
+                    predicateList.add(criteriaBuilder.notEqual(queryRoot.get(key), value));
+                }
+            }
+        }
 
         if (order != null && !"".equals(order)){
             String[] orderParams = order.split(",");

@@ -33,6 +33,17 @@ App.factory('MyService', function($http, $location, $rootScope, $route) {
             });
     };
 
+    MyService.prototype.getAutoCompleteValues = function () {
+        var myObject = this;
+        $http.get(this.url + '/getAutoCompleteValues', null, null)
+            .success(function (result) {
+                myObject.scope.categories = result.datas;
+            })
+            .error(function (res, status) {
+                unhandledException(res, status);
+            });
+    };
+
     MyService.prototype.Refresh = function() {
         this.getAll();
         this.New();
